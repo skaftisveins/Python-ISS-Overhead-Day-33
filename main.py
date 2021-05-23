@@ -1,8 +1,7 @@
-from config import MY_LAT, MY_LONG, MY_EMAIL, MY_PASSWORD, SMTP_ADDRESS
+from config import *
 import requests
-from datetime import datetime
-import smtplib
-import time as t
+from datetime import datetime as dt
+from twilio.rest import Client
 
 
 def is_iss_overhead():
@@ -14,16 +13,18 @@ def is_iss_overhead():
 
     iss_longitude = float(data["iss_position"]["longitude"])
     iss_latitude = float(data["iss_position"]["latitude"])
+    print(f"Lat: {iss_latitude} | Long: {iss_longitude}")
 
-    if MY_LAT - 5 <= iss_latitude <= MY_LAT + 5 and MY_LONG - 5 <= iss_longitude <= MY_LONG + 5:
+    if float(my_lat) - 5 <= iss_latitude <= float(my_lat) + 5 and float(my_long) - 5 <= iss_longitude <= float(my_long) + 5:
         return True
     else:
         print("Nothing to see here!")
 
+
 def is_night():
     parameters = {
-        "lat": MY_LAT,
-        "lng": MY_LONG,
+        "lat": my_lat,
+        "lng": my_long,
         "formatted": 0
     }
 
@@ -34,21 +35,21 @@ def is_night():
 
     sunrise = int(data["results"]["sunrise"].split("T")[1].split(":")[0])
     sunset = int(data["results"]["sunset"].split("T")[1].split(":")[0])
-    time_now = datetime.now().hour
-    
-    if time_now >= sunset or time_now <= sunrise: # Find out if it's night
+    time_now = dt.now().hour
+
+    if time_now >= sunset or time_now <= sunrise:  # Find out if it's night
         return True
 
-while True:
-    t.sleep(60)
-    if is_iss_overhead() and is_night():
-        with smtplib.SMTP(SMTP_ADDRESS) as connection:
-            connection.starttls()
-            connection.login(MY_EMAIL, MY_PASSWORD)
-            connection.sendmail(from_addr=MY_EMAIL,to_addrs=MY_EMAIL, msg=f"Subject: Take a look outside boooiiii!\n\nYou might be just lucky enough to spot the ISS in the night sky!")
+
+if is_iss_overhead() and is_night():
+    client = Client(twilio_account_sid, twilio_auth_token)
+    message = client.messages \
+        .create(
+            body="Take a look outside boooiiii!\n\nYou might spot the ISS 🚀 above you in the night sky!",
+            from_=twilio_phone_number,
+            to=my_phone_number
+        )
+    print(message.status)
 
 
-# If the ISS is close to my current position
-# and it is currently dark
-# Then send me an email to tell me to look up.
-# BONUS: run the code every 60 seconds.
+is_night()
