@@ -7,7 +7,7 @@ from twilio.rest import Client
 def is_iss_overhead():
     """Your position is within +5 or -5 degrees of the ISS position."""
 
-    response = requests.get(url="http://api.open-notify.org/iss-now.json")
+    response = requests.get(api_open_notify_iss_endpoint)
     response.raise_for_status()
     data = response.json()
 
@@ -29,7 +29,7 @@ def is_night():
     }
 
     response = requests.get(
-        "https://api.sunrise-sunset.org/json", parameters)
+        api_sunrise_sunset_endpoint, parameters)
     response.raise_for_status()
     data = response.json()
 
